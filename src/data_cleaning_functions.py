@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
-# Constant for sloppy degree to km calculations
+# Constant for sloppy distance calculations from lat and long
 constant_degr_km = 6378/360
 
 # Imputation for waterfront and view
@@ -46,10 +46,18 @@ def last_known_change(df):
 
     return df_temp
 
+# Find location of highest wealth from the Test-Data
+def wealth_centre(df):
+    ind = df['price']==df['price'].max()
+    coordinates_max_price = {"lat": df.lat[ind].item(), "long": df.long[ind].item()}
+    return coordinates_max_price
+
 ### Function for calculating Distance to wealth center
-def dist_wealth_centre(df, coords, constant_degr_km = constant_degr_km):
+def dist_wealth_centre(df, constant_degr_km = constant_degr_km):
     X_temp = df.copy()
-    # Constant for sloppy transformation
+    
+    # Find location of wealth_centre
+    coords = wealth_centre(X_temp)
 
     # Absolute difference of latitude between centre and property
     X_temp['delta_lat'] = np.absolute(coords["lat"]- X_temp['lat'])
@@ -59,7 +67,7 @@ def dist_wealth_centre(df, coords, constant_degr_km = constant_degr_km):
     X_temp['center_wealth_distance']= ((X_temp['delta_long'] * np.cos(np.radians(coords["lat"]))) ** 2 + 
                                        X_temp['delta_lat']**2) ** (1/2) * 2 * np.pi * constant_degr_km
     
-    X_temp.drop(["delta_lat", "delta_lon"], axis = 1, inplace = True)
+    X_temp.drop(["delta_lat", "delta_long"], axis = 1, inplace = True)
     return X_temp
 
 # Distance from One Point to Another
@@ -74,21 +82,24 @@ def dist(long, lat, ref_long, ref_lat, constant_degr_km = constant_degr_km):
 
 # Distance to the Water of every entry in the dataframe
 def dist_water(df):
-    X_temp= df.copy()
+    X_temp = df.copy()
 
     # All houses with "waterfront" as DF
-    X_temp = X_temp.query('waterfront == 1')
+    X_water = X_temp.query('waterfront == 1')
 
     water_distance = []
     # For each row in our data frame we now calculate the distance to all the houses at the seafront
-    for idx, lat in X_temp.lat.items():
+    for idx in X_temp.index: # lat not necessary
         ref_list = []
-        for x,y in zip(list(df_water.long), list(df_water.lat)):
-            ref_list.append(dist(X_temp.long[idx], X_temp.lat[idx],x,y).min())
         
-    water_distance.append(min(ref_list))
+        # Find the smallest distance among all distances for house idx
+        for x,y in zip(list(X_water.long), list(X_water.lat)):
+            dist_idx_water = dist(X_temp.long[idx], X_temp.lat[idx],x,y)  
+            ref_list.append(dist_idx_water.min())
+        
+        water_distance.append(min(ref_list))
     X_temp["water_dist_km"] = water_distance
-    return X_temp
+    return water_distance
 
 
 

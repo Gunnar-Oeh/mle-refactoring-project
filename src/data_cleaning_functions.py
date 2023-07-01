@@ -1,10 +1,13 @@
-### Data Cleaning Transformers
+### Data Cleaning Functions
 import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
 # Constant for sloppy degree to km calculations
 constant_degr_km = 6378/360
+
+# Imputation for waterfront and view
+# Can be done with .fillna(0, inplace=True)
 
 ### Drop Houses with an irregular Bedrooms/Bathroom ratio. Outliers > 8
 def bath_bed_ratio_outlier(df, outlier_ratio = 8):
@@ -69,13 +72,18 @@ def dist(long, lat, ref_long, ref_lat, constant_degr_km = constant_degr_km):
     return ((delta_long_corr)**2 +(delta_lat)**2) ** (1/2) * 2 * np.pi * constant_degr_km
 
 
-# Distance to the Water
-def dist_water()
+# Distance to the Water of every entry in the dataframe
+def dist_water(df):
+    X_temp= df.copy()
+
+    # All houses with "waterfront" as DF
+    X_temp = X_temp.query('waterfront == 1')
+
     water_distance = []
-        # For each row in our data frame we now calculate the distance to all the houses at the seafront
+    # For each row in our data frame we now calculate the distance to all the houses at the seafront
     for idx, lat in X_temp.lat.items():
         ref_list = []
-        for x,y in zip(list(self.water_list.long), list(self.water_list.lat)):
+        for x,y in zip(list(df_water.long), list(df_water.lat)):
             ref_list.append(dist(X_temp.long[idx], X_temp.lat[idx],x,y).min())
         
     water_distance.append(min(ref_list))

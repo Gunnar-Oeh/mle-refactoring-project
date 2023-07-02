@@ -5,6 +5,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 # Constant for sloppy distance calculations from lat and long
 constant_degr_km = 6378/360
+outlier_ratio = 8
 
 # Imputation for waterfront and view
 # Can be done with .fillna(0, inplace=True)

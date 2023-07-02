@@ -2,7 +2,6 @@ from src.custom_transformers import *
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-import numpy as np
 
 # Top Level - as a new class without any inheritance.
 # Lists of columns for which the different pipelines are applied -> will later be given as self.attributes to the methods
@@ -18,6 +17,7 @@ class PreprocessingKingCountyData():
         ### DataCleaning Pipeline - Applied to all columns - One Transformer after the other
         ### DF -> tranforer_1(DF) -> DF1 -> transformer_2(DF1) -> ... -> DF_n
         self.data_cleaning_pipeline = Pipeline([
+            ('old_names', Restore_Names_Transformer()),
             ('bedrooms_per_bath_outlier', Bath_Bed_Transformer()),
             ('calculate_sqft_basement', Sqft_Basement_Transformer()),
             ('define_last_change', Last_Change_Transformer()),
@@ -30,13 +30,13 @@ class PreprocessingKingCountyData():
         ### to be handled differently for imputation, scaling, transforming
         self.column_imputer = ColumnTransformer([
             ('just_imputing', self.impute_pipeline, self.imputed_features)
-        ], remainder='passthrough')
+        ], remainder='passthrough').set_output(transform="pandas")
 
         # Imputing ColumnTransformer which allows for choosing columns
         # and data_cleaning_Pipeline with sequential handling of the whole df applied into Pipelin
         self.full_pipeline = Pipeline([
-            ('imputing', self.column_imputer()),
-            ('data_cleaning', self.data_cleaning_pipeline())
+            ('imputing', self.column_imputer),
+            ('data_cleaning', self.data_cleaning_pipeline)
         ])
 
     ### _fit_transform method -> to apply onto training data and potentially save values for test-data

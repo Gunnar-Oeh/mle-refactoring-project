@@ -6,8 +6,8 @@ from sklearn.impute import SimpleImputer
 # Top Level - as a new class without any inheritance.
 # Lists of columns for which the different pipelines are applied -> will later be given as self.attributes to the methods
 class PreprocessingKingCountyData():
-    def __init__(self):
-        self.imputed_features = []
+    def __init__(self, imputed_features):
+        self.imputed_features = []#imputed_features # Empty here
 
         ### Impute Values
         self.impute_pipeline = Pipeline([
@@ -29,7 +29,8 @@ class PreprocessingKingCountyData():
         ### Would include several Pipelines, if there were several sets of features
         ### to be handled differently for imputation, scaling, transforming
         self.column_imputer = ColumnTransformer([
-            ('just_imputing', self.impute_pipeline, self.imputed_features)
+            # Until this point, sellf.imputed_features is called as empty?
+            ('just_imputing', self.impute_pipeline, []) 
         ], remainder='passthrough').set_output(transform="pandas")
 
         # Imputing ColumnTransformer which allows for choosing columns
@@ -40,8 +41,8 @@ class PreprocessingKingCountyData():
         ])
 
     ### _fit_transform method -> to apply onto training data and potentially save values for test-data
-    def preprocess_fit_transform(self, df, imputed_features):
-        self.imputed_features = imputed_features
+    def preprocess_fit_transform(self, df): #, imputed_features):
+        #self.column_imputer.transformers[0][2] = imputed_features
         return self.full_pipeline.fit_transform(df)
     
     ### transform to apply onto test data
